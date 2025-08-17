@@ -1,0 +1,182 @@
+# Development Environment Configuration for gradlemedium200 e-commerce platform
+# Contains environment-specific settings for development environment
+
+# Server configuration - Development specific
+server:
+  port: 8080
+  error:
+    include-stacktrace: always
+    include-message: always
+
+# Spring configuration for development
+spring:
+  application:
+    name: gradlemedium200-dev
+  jackson:
+    default-property-inclusion: non_null
+    property-naming-strategy: SNAKE_CASE
+  devtools:
+    restart:
+      enabled: true
+      additional-paths: src/main/java
+    livereload:
+      enabled: true
+
+# AWS Configuration - Development environment
+aws:
+  region: us-west-2
+  credentials:
+    # Use local environment variables for development
+    profile: dev
+    # Development mode uses AWS local stack
+    use-local-stack: true
+  sns:
+    endpoint: http://localhost:4566
+    # Development topics are prefixed with 'dev-'
+    topics:
+      order-events: dev-order-events
+      user-events: dev-user-events
+      product-events: dev-product-events
+      notification-events: dev-notification-events
+  sqs:
+    endpoint: http://localhost:4566
+    queues:
+      order-processing: dev-order-processing-queue
+      notification-delivery: dev-notification-delivery-queue
+      product-update: dev-product-update-queue
+  dynamodb:
+    endpoint: http://localhost:4566
+    tables:
+      users: dev-users-table
+      products: dev-products-table
+      orders: dev-orders-table
+      notifications: dev-notifications-table
+
+# Development service endpoints
+services:
+  user-service:
+    url: http://localhost:8081/api/users
+    connection-timeout: 10000  # Extended timeout for development
+    read-timeout: 10000
+    retry-max-attempts: 5
+  product-catalog:
+    url: http://localhost:8082/api/products
+    connection-timeout: 10000
+    read-timeout: 10000
+    retry-max-attempts: 5
+  order-service:
+    url: http://localhost:8083/api/orders
+    connection-timeout: 10000
+    read-timeout: 10000
+    retry-max-attempts: 5
+  notification-service:
+    url: http://localhost:8084/api/notifications
+    connection-timeout: 10000
+    read-timeout: 10000
+    retry-max-attempts: 5
+
+# Management & Monitoring - Development settings
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'  # Expose all actuator endpoints in development
+  endpoint:
+    health:
+      show-details: always  # Always show detailed health info in development
+
+# Logging - Development configuration
+logging:
+  level:
+    root: INFO
+    com.gradlemedium200: DEBUG  # More verbose logging in development
+    org.springframework: DEBUG
+    org.hibernate.SQL: DEBUG  # Log SQL queries
+    org.hibernate.type.descriptor.sql: TRACE  # Log SQL parameter values
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %highlight(%-5level) [%thread] %logger{36} - %msg%n"
+  file:
+    name: logs/gradlemedium200-dev.log
+
+# Security - Development configuration
+security:
+  jwt:
+    token-validity-seconds: 86400000  # Extended validity for development
+    secret-key: dev-jwt-secret-key-for-testing-purposes-only
+  allowed-origins: '*'  # Allow all origins in development
+  public-endpoints: /api/**,/actuator/**,/h2-console/**  # More public endpoints in development
+
+# Application specific settings - Development environment
+app:
+  api-gateway:
+    timeout: 60000  # Extended timeout for development
+    rate-limit:
+      enabled: false  # Disable rate limiting in development
+  cors:
+    allowed-origins: '*'  # Allow all origins in development
+    allowed-methods: '*'
+    allowed-headers: '*'
+  feature-flags:
+    enable-caching: false  # Disable caching in development
+    enable-metrics: true
+    enable-circuit-breaker: false  # Disable circuit breaker in development
+    enable-debug-mode: true  # Development-only feature flag
+  cache:
+    ttl-seconds: 60  # Short cache TTL for development
+    maximum-size: 100
+  mock:
+    enabled: true  # Enable mock services for development
+    data-generation: true  # Enable test data generation
+
+# Development-specific feature toggles
+feature-toggles:
+  enable-payment-gateway-mock: true
+  enable-email-service-mock: true
+  enable-user-service-mock: false
+  enable-product-service-mock: false
+  enable-order-service-mock: false
+
+# H2 Database configuration for development
+spring.datasource:
+  url: jdbc:h2:mem:devdb
+  username: sa
+  password: 
+  driver-class-name: org.h2.Driver
+spring.h2.console:
+  enabled: true
+  path: /h2-console
+  settings.web-allow-others: true
+
+# JPA configuration for development
+spring.jpa:
+  database-platform: org.hibernate.dialect.H2Dialect
+  hibernate:
+    ddl-auto: create-drop
+  show-sql: true
+  properties:
+    hibernate:
+      format_sql: true
+
+# Springdoc OpenAPI configuration for development
+springdoc:
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+    doc-expansion: none
+  api-docs:
+    enabled: true
+  show-actuator: true
+  packages-to-scan: com.gradlemedium200.controller
+
+# Development-specific metrics configuration
+metrics:
+  export:
+    enabled: true
+    step: 10s
+  distribution:
+    percentiles-histogram:
+      http.server.requests: true
+    percentiles:
+      http.server.requests: 0.5, 0.9, 0.95, 0.99

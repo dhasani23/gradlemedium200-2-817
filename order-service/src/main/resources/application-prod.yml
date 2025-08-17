@@ -1,0 +1,180 @@
+# OrderService Production Environment Configuration
+# Configuration properties specific to the production environment
+
+spring:
+  # Override base application settings for production
+  jackson:
+    serialization:
+      indent-output: false
+  
+# Server configuration for production
+server:
+  port: ${SERVER_PORT:8081}
+  compression:
+    enabled: true
+    min-response-size: 2048
+  http2:
+    enabled: true
+  
+# Production logging configuration - reduced verbosity
+logging:
+  level:
+    root: WARN
+    com.gradlemedium200.orderservice: INFO
+    org.springframework.web: WARN
+    com.amazonaws: WARN
+  file:
+    name: /var/log/order-service/order-service-prod.log
+    max-size: 100MB
+    max-history: 30
+  # Ensure JSON format for easier log processing
+  pattern:
+    file: '{"timestamp":"%d{yyyy-MM-dd HH:mm:ss.SSS}","level":"%p","thread":"%t","class":"%logger{36}","message":"%m"}%n'
+
+# AWS Production Configuration
+aws:
+  region: ${AWS_REGION:us-east-1}
+  credentials:
+    # Production uses IAM roles rather than hardcoded credentials
+    access-key: ${AWS_ACCESS_KEY:}
+    secret-key: ${AWS_SECRET_KEY:}
+  endpoint:
+    # In production, we use AWS services directly, not LocalStack
+    override: false
+    
+  # DynamoDB Production Configuration
+  dynamodb:
+    table-name-prefix: ${DYNAMODB_TABLE_PREFIX:gradlemedium200-prod-}
+    read-capacity-units: ${DYNAMODB_READ_CAPACITY:20}
+    write-capacity-units: ${DYNAMODB_WRITE_CAPACITY:20}
+    endpoint-override: false
+    create-tables: false  # Tables should be created through infrastructure as code
+    
+  # SQS Production Configuration
+  sqs:
+    order-events-queue: ${SQS_ORDER_EVENTS_QUEUE:prod-order-events-queue}
+    payment-events-queue: ${SQS_PAYMENT_EVENTS_QUEUE:prod-payment-events-queue}
+    inventory-events-queue: ${SQS_INVENTORY_EVENTS_QUEUE:prod-inventory-events-queue}
+    endpoint-override: false
+    message-retention-period: 345600  # 4 days in seconds
+    visibility-timeout: 60
+    max-receive-count: 5
+    
+  # SNS Production Configuration
+  sns:
+    order-notifications-topic: ${SNS_ORDER_NOTIFICATIONS_TOPIC:prod-order-notifications-topic}
+    endpoint-override: false
+
+# Production Service URLs - use service discovery in production
+service:
+  user-service:
+    base-url: ${USER_SERVICE_URL:https://user-service.gradlemedium200.com/api/v1}
+    connect-timeout: 3000
+    read-timeout: 8000
+    
+  product-catalog:
+    base-url: ${PRODUCT_CATALOG_URL:https://product-catalog.gradlemedium200.com/api/v1}
+    connect-timeout: 3000
+    read-timeout: 8000
+    
+  notification-service:
+    base-url: ${NOTIFICATION_SERVICE_URL:https://notification-service.gradlemedium200.com/api/v1}
+    connect-timeout: 3000
+    read-timeout: 8000
+
+# Production Payment Gateway Configuration
+payment:
+  gateway:
+    base-url: ${PAYMENT_GATEWAY_URL:https://api.payment-provider.com/v2}
+    api-key: ${PAYMENT_GATEWAY_API_KEY:}  # Must be provided via environment variable
+    connect-timeout: 5000
+    read-timeout: 15000
+    retry:
+      max-attempts: 3
+      initial-backoff-ms: 1000
+    circuit-breaker:
+      enabled: true
+      failure-threshold: 5
+      reset-timeout-ms: 30000
+    
+# Order Service Production Configuration
+order:
+  validation:
+    min-order-value: 5.0
+    max-order-items: 200
+    allow-international-shipping: ${ALLOW_INTERNATIONAL_SHIPPING:true}
+  processing:
+    auto-approve-under-amount: ${AUTO_APPROVE_AMOUNT:100.0}
+    reservation-timeout-minutes: 30
+    cancellation-window-hours: 24
+  cart:
+    expiration-days: 45
+    max-items: 100
+
+# Restricted management endpoints for production
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /management
+  endpoint:
+    health:
+      show-details: when-authorized
+    shutdown:
+      enabled: false
+  health:
+    dynamodb:
+      enabled: true
+    sqs:
+      enabled: true
+
+# Production cache settings - longer TTL for better performance
+cache:
+  product-cache:
+    time-to-live: 7200  # 2 hours for production
+    max-entries: 10000
+  user-cache:
+    time-to-live: 7200  # 2 hours for production
+    max-entries: 5000
+
+# Production-specific settings
+resilience:
+  retry:
+    enabled: true
+    max-attempts: 3
+    backoff-period-ms: 1000
+  circuit-breaker:
+    enabled: true
+    failure-threshold: 10
+    wait-duration-ms: 10000
+  rate-limiter:
+    enabled: true
+    limit-for-period: 1000
+    limit-refresh-period-ms: 60000
+
+# Production feature flags
+features:
+  enable-performance-monitoring: true
+  enable-distributed-tracing: true
+  enable-response-compression: true
+  enable-audit-logging: true
+  enable-metrics-collection: true
+
+# Production security settings
+security:
+  require-ssl: true
+  content-security-policy: "default-src 'self'"
+  secure-headers:
+    hsts: true
+    xss-protection: true
+    content-type-options: true
+    frame-options: DENY
+    
+# Transaction settings
+transaction:
+  timeout-seconds: 30
+  isolation-level: READ_COMMITTED
+
+# DO NOT place sensitive information directly in this file
+# Use environment variables or a secure vault service

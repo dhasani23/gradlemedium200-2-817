@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- Properties for centralized logging configuration -->
+    <property name="LOG_PATH" value="${LOG_PATH:-./logs}" />
+    <property name="LOG_FILE" value="${LOG_FILE:-gradlemedium200}" />
+    <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - [%X{requestId}] - %msg%n" />
+    <property name="JSON_LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %msg%n" />
+    <property name="MAX_FILE_SIZE" value="100MB" />
+    <property name="MAX_HISTORY" value="30" />
+    <property name="TOTAL_SIZE_CAP" value="3GB" />
+
+    <!-- Appenders -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- File appender for application logs -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/${LOG_FILE}.log</file>
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/${LOG_FILE}-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxFileSize>${MAX_FILE_SIZE}</maxFileSize>
+            <maxHistory>${MAX_HISTORY}</maxHistory>
+            <totalSizeCap>${TOTAL_SIZE_CAP}</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+
+    <!-- JSON appender for machine processing -->
+    <appender name="JSON_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/${LOG_FILE}-json.log</file>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <!-- Include thread, logger and exception information -->
+            <includeMdc>true</includeMdc>
+            <includeContext>false</includeContext>
+            <includeCallerData>false</includeCallerData>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/${LOG_FILE}-json-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxFileSize>${MAX_FILE_SIZE}</maxFileSize>
+            <maxHistory>${MAX_HISTORY}</maxHistory>
+            <totalSizeCap>${TOTAL_SIZE_CAP}</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+
+    <!-- Async appender to improve performance -->
+    <appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="FILE" />
+        <queueSize>512</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+    </appender>
+
+    <!-- Specific loggers -->
+    <logger name="com.gradlemedium200" level="INFO" />
+    <logger name="com.gradlemedium200.aspect" level="DEBUG" />
+    <logger name="com.gradlemedium200.interceptor" level="DEBUG" />
+    <logger name="com.gradlemedium200.aws" level="INFO" />
+
+    <!-- HTTP client logging -->
+    <logger name="org.apache.http" level="INFO" />
+    <logger name="org.springframework.web.client.RestTemplate" level="INFO" />
+    
+    <!-- Security related logging -->
+    <logger name="org.springframework.security" level="INFO" />
+    
+    <!-- Hibernate and database logging -->
+    <logger name="org.hibernate" level="INFO" />
+    <logger name="org.hibernate.SQL" level="INFO" />
+    <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="INFO" />
+    
+    <!-- AWS SDK logging -->
+    <logger name="com.amazonaws" level="INFO" />
+    <logger name="com.amazonaws.request" level="INFO" />
+
+    <!-- Spring framework logging -->
+    <logger name="org.springframework" level="INFO" />
+    <logger name="org.springframework.web" level="INFO" />
+    <logger name="org.springframework.cache" level="INFO" />
+    <logger name="org.springframework.scheduling" level="INFO" />
+
+    <!-- Environment specific configurations -->
+    <springProfile name="dev">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE" />
+            <appender-ref ref="ASYNC" />
+        </root>
+        <logger name="com.gradlemedium200" level="DEBUG" />
+    </springProfile>
+
+    <springProfile name="test">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE" />
+            <appender-ref ref="ASYNC" />
+        </root>
+    </springProfile>
+
+    <springProfile name="prod">
+        <root level="WARN">
+            <appender-ref ref="CONSOLE" />
+            <appender-ref ref="ASYNC" />
+            <appender-ref ref="JSON_FILE" />
+        </root>
+        
+        <!-- In production, enable JSON logs for API access -->
+        <logger name="com.gradlemedium200.interceptor.RequestInterceptor" level="INFO" additivity="false">
+            <appender-ref ref="JSON_FILE" />
+        </logger>
+        <logger name="com.gradlemedium200.interceptor.ResponseInterceptor" level="INFO" additivity="false">
+            <appender-ref ref="JSON_FILE" />
+        </logger>
+        
+        <!-- Health check and metrics logging -->
+        <logger name="com.gradlemedium200.health" level="INFO" />
+        <logger name="com.gradlemedium200.service.HealthCheckService" level="INFO" />
+        <logger name="com.gradlemedium200.service.MetricsService" level="INFO" />
+    </springProfile>
+    
+    <!-- Default root logger -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE" />
+        <appender-ref ref="ASYNC" />
+    </root>
+
+</configuration>

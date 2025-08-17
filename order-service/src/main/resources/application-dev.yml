@@ -1,0 +1,114 @@
+# OrderService Development Environment Configuration
+# Configuration properties specific to the development environment
+
+spring:
+  # Override base application settings for development
+  jackson:
+    serialization:
+      indent-output: true
+  
+# Server configuration for development
+server:
+  port: 8081
+  
+# Enhanced logging for development
+logging:
+  level:
+    root: INFO
+    com.gradlemedium200.orderservice: DEBUG
+    org.springframework.web: DEBUG
+    com.amazonaws: DEBUG
+    org.springframework.data: DEBUG
+  file:
+    name: logs/order-service-dev.log
+
+# AWS Development Configuration
+aws:
+  region: us-east-1
+  credentials:
+    access-key: dev-access-key
+    secret-key: dev-secret-key
+  endpoint:
+    override: true
+    url: http://localhost:4566  # LocalStack endpoint for local development
+  
+  # DynamoDB Development Configuration
+  dynamodb:
+    endpoint-override: true
+    endpoint-url: http://localhost:4566
+    create-tables: true
+    
+  # SQS Development Configuration
+  sqs:
+    endpoint-override: true
+    endpoint-url: http://localhost:4566
+    
+  # SNS Development Configuration
+  sns:
+    endpoint-override: true
+    endpoint-url: http://localhost:4566
+
+# Development Service URLs
+service:
+  user-service:
+    base-url: http://localhost:8080/api/v1
+    
+  product-catalog:
+    base-url: http://localhost:8082/api/v1
+    
+  notification-service:
+    base-url: http://localhost:8083/api/v1
+
+# Development Payment Gateway Configuration
+payment:
+  gateway:
+    base-url: http://localhost:9000/api
+    api-key: dev-api-key
+    
+# Order Service Development Configuration
+order:
+  validation:
+    allow-international-shipping: true
+  processing:
+    # More lenient auto-approval for development testing
+    auto-approve-under-amount: 200.0
+    # Shorter timeouts for development testing
+    reservation-timeout-minutes: 5
+    cancellation-window-hours: 1
+
+# Enable all management endpoints for development
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+
+# Development cache settings - shorter TTL for testing
+cache:
+  product-cache:
+    time-to-live: 300  # 5 minutes for development
+    max-entries: 100
+  user-cache:
+    time-to-live: 300  # 5 minutes for development
+    max-entries: 50
+
+# Development feature flags
+features:
+  enable-payment-simulation: true
+  enable-inventory-simulation: true
+  enable-mock-shipping: true
+  enable-performance-monitoring: true
+
+# Development testing settings
+testing:
+  generate-test-data: true
+  test-user-id: dev-test-user-123
+  test-order-id-prefix: TEST-DEV-
+  skip-payment-validation: true
+
+# TODO: Configure integration test settings
+# TODO: Set up mock service responses for development
+# FIXME: Implement proper secret management for development credentials

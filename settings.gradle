@@ -1,0 +1,6 @@
+rootProject.name = 'gradlemedium200'
+include 'common'
+include 'user-service'
+include 'product-catalog'
+include 'notification-service'
+include 'order-service'

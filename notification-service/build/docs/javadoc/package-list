@@ -1,0 +1,6 @@
+com.gradlemedium200.notification
+com.gradlemedium200.notification.aws
+com.gradlemedium200.notification.controller
+com.gradlemedium200.notification.model
+com.gradlemedium200.notification.repository
+com.gradlemedium200.notification.service

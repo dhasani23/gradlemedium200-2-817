@@ -1,0 +1,13 @@
+com.gradlemedium200.order
+com.gradlemedium200.orderservice
+com.gradlemedium200.orderservice.config
+com.gradlemedium200.orderservice.controller
+com.gradlemedium200.orderservice.dto
+com.gradlemedium200.orderservice.exception
+com.gradlemedium200.orderservice.integration
+com.gradlemedium200.orderservice.mapper
+com.gradlemedium200.orderservice.messaging
+com.gradlemedium200.orderservice.model
+com.gradlemedium200.orderservice.repository
+com.gradlemedium200.orderservice.service
+com.gradlemedium200.orderservice.validator

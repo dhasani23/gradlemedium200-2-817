@@ -1,0 +1,125 @@
+spring:
+  application:
+    name: notification-service
+  # Database configuration
+  datasource:
+    url: jdbc:h2:mem:notificationdb
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true
+    show-sql: false
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+# Server configuration
+server:
+  port: 8083
+  servlet:
+    context-path: /api/notifications
+
+# AWS Configuration
+aws:
+  region: us-east-1
+  sns:
+    # SNS topics for different notification types
+    email-topic-arn: arn:aws:sns:us-east-1:123456789012:notification-email-topic
+    sms-topic-arn: arn:aws:sns:us-east-1:123456789012:notification-sms-topic
+    push-topic-arn: arn:aws:sns:us-east-1:123456789012:notification-push-topic
+    # Default SMS message attributes
+    sms:
+      sender-id: GradleMedium
+      max-price: 0.50
+      message-type: Transactional
+  sqs:
+    # SQS queues for notification processing
+    notification-queue-url: https://sqs.us-east-1.amazonaws.com/123456789012/notification-queue
+    dead-letter-queue-url: https://sqs.us-east-1.amazonaws.com/123456789012/notification-dlq
+    # Queue configuration
+    max-retries: 3
+    visibility-timeout-seconds: 30
+    wait-time-seconds: 20
+  dynamodb:
+    # DynamoDB tables
+    notification-table: notifications
+    template-table: notification-templates
+    preference-table: notification-preferences
+    in-app-table: in-app-notifications
+    # Local DynamoDB endpoint (for local development)
+    endpoint: http://localhost:8000
+    # Set to false for production
+    local-db: false
+
+# Notification service configuration
+notification:
+  # Default notification channel if user preferences are not set
+  default-channel: EMAIL
+  # Template processing settings
+  templates:
+    cache-size: 100
+    refresh-interval-minutes: 60
+  # Rate limiting
+  rate-limits:
+    max-per-user-daily: 50
+    max-per-user-hourly: 10
+    enabled: true
+  # Delivery retries
+  delivery:
+    max-attempts: 3
+    retry-delay-seconds: 300
+  # Notification channels configuration
+  channels:
+    email:
+      enabled: true
+      from-address: notifications@gradlemedium200.com
+      reply-to: no-reply@gradlemedium200.com
+      bounce-handling-enabled: true
+    sms:
+      enabled: true
+      default-country-code: +1
+      max-length: 160
+    push:
+      enabled: true
+      ttl-seconds: 86400
+    in-app:
+      enabled: true
+      max-unread: 100
+      auto-expire-days: 30
+
+# Logging configuration
+logging:
+  level:
+    root: INFO
+    com.gradlemedium200: DEBUG
+    org.springframework.web: INFO
+    com.amazonaws: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file: logs/notification-service.log
+
+# Management endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+
+# Documentation (Swagger/OpenAPI)
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method

@@ -1,0 +1,147 @@
+# OrderService Application Configuration
+# Spring Boot configuration for order processing module
+
+spring:
+  application:
+    name: order-service
+  profiles:
+    active: dev
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+      fail-on-empty-beans: false
+    deserialization:
+      fail-on-unknown-properties: false
+    default-property-inclusion: non_null
+  
+# Server configuration
+server:
+  port: 8081
+  servlet:
+    context-path: /api/v1
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/plain
+  
+# Logging configuration
+logging:
+  level:
+    root: INFO
+    com.gradlemedium200.orderservice: DEBUG
+    org.springframework.web: INFO
+    com.amazonaws: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/order-service.log
+    max-size: 10MB
+    max-history: 10
+
+# AWS Configuration
+aws:
+  region: us-east-1
+  credentials:
+    access-key: ${AWS_ACCESS_KEY:dummy-access-key}
+    secret-key: ${AWS_SECRET_KEY:dummy-secret-key}
+  endpoint:
+    override: ${AWS_ENDPOINT_OVERRIDE:false}
+    url: ${AWS_ENDPOINT_URL:http://localhost:4566}
+  
+  # DynamoDB Configuration
+  dynamodb:
+    table-name-prefix: ${DYNAMODB_TABLE_PREFIX:gradlemedium200-}
+    orders-table: ${DYNAMODB_ORDERS_TABLE:orders}
+    carts-table: ${DYNAMODB_CARTS_TABLE:carts}
+    read-capacity-units: 5
+    write-capacity-units: 5
+    endpoint-override: ${DYNAMODB_ENDPOINT_OVERRIDE:${aws.endpoint.override}}
+    endpoint-url: ${DYNAMODB_ENDPOINT_URL:${aws.endpoint.url}}
+    create-tables: ${DYNAMODB_CREATE_TABLES:true}
+    
+  # SQS Configuration  
+  sqs:
+    order-events-queue: ${SQS_ORDER_EVENTS_QUEUE:order-events-queue}
+    payment-events-queue: ${SQS_PAYMENT_EVENTS_QUEUE:payment-events-queue}
+    inventory-events-queue: ${SQS_INVENTORY_EVENTS_QUEUE:inventory-events-queue}
+    endpoint-override: ${SQS_ENDPOINT_OVERRIDE:${aws.endpoint.override}}
+    endpoint-url: ${SQS_ENDPOINT_URL:${aws.endpoint.url}}
+    message-retention-period: 345600 # 4 days in seconds
+    visibility-timeout: 30
+    max-receive-count: 3
+    
+  # SNS Configuration
+  sns:
+    order-notifications-topic: ${SNS_ORDER_NOTIFICATIONS_TOPIC:order-notifications-topic}
+    endpoint-override: ${SNS_ENDPOINT_OVERRIDE:${aws.endpoint.override}}
+    endpoint-url: ${SNS_ENDPOINT_URL:${aws.endpoint.url}}
+
+# Integration Services Configuration
+service:
+  user-service:
+    base-url: ${USER_SERVICE_URL:http://localhost:8080/api/v1}
+    connect-timeout: 2000
+    read-timeout: 5000
+    
+  product-catalog:
+    base-url: ${PRODUCT_CATALOG_URL:http://localhost:8082/api/v1}
+    connect-timeout: 2000
+    read-timeout: 5000
+    
+  notification-service:
+    base-url: ${NOTIFICATION_SERVICE_URL:http://localhost:8083/api/v1}
+    connect-timeout: 2000
+    read-timeout: 5000
+
+# Payment Gateway Configuration
+payment:
+  gateway:
+    base-url: ${PAYMENT_GATEWAY_URL:http://localhost:9000/api}
+    api-key: ${PAYMENT_GATEWAY_API_KEY:test-api-key}
+    connect-timeout: 3000
+    read-timeout: 10000
+    
+# Order Service Configuration
+order:
+  validation:
+    min-order-value: 1.0
+    max-order-items: 100
+    allow-international-shipping: true
+  processing:
+    auto-approve-under-amount: 50.0
+    reservation-timeout-minutes: 30
+    cancellation-window-hours: 24
+  cart:
+    expiration-days: 30
+    max-items: 50
+
+# Management and Monitoring Endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+  health:
+    dynamodb:
+      enabled: true
+    sqs:
+      enabled: true
+
+# Cache Configuration
+cache:
+  product-cache:
+    time-to-live: 3600
+    max-entries: 1000
+  user-cache:
+    time-to-live: 3600
+    max-entries: 500
+
+# TODO: Configure environment-specific settings in application-{profile}.yml files
+# FIXME: Replace dummy credentials with proper secret management solution

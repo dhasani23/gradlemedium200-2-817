@@ -1,0 +1,7 @@
+com.gradlemedium200.user
+com.gradlemedium200.userservice
+com.gradlemedium200.userservice.config
+com.gradlemedium200.userservice.model
+com.gradlemedium200.userservice.repository
+com.gradlemedium200.userservice.security
+com.gradlemedium200.userservice.service

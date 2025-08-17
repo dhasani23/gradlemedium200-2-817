@@ -1,0 +1,238 @@
+# Production Environment Configuration for gradlemedium200 e-commerce platform
+# Contains environment-specific settings for production environment
+
+# Server configuration - Production specific
+server:
+  port: ${SERVER_PORT:8080}
+  error:
+    include-stacktrace: never
+    include-message: never
+  compression:
+    enabled: true
+    min-response-size: 2048
+  tomcat:
+    max-threads: 400
+    min-spare-threads: 50
+    max-connections: 10000
+    accept-count: 100
+    connection-timeout: 20000
+
+# Spring configuration for production
+spring:
+  application:
+    name: gradlemedium200-prod
+  jackson:
+    default-property-inclusion: non_null
+  mvc:
+    async:
+      request-timeout: 30000
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=10000,expireAfterWrite=60m
+  main:
+    banner-mode: off
+
+# AWS Configuration - Production environment
+aws:
+  region: ${AWS_REGION:us-east-1}
+  credentials:
+    # Use IAM Role for production
+    use-instance-profile: true
+  sns:
+    endpoint: https://sns.${aws.region}.amazonaws.com
+    # Production topics
+    topics:
+      order-events: prod-order-events
+      user-events: prod-user-events
+      product-events: prod-product-events
+      notification-events: prod-notification-events
+  sqs:
+    endpoint: https://sqs.${aws.region}.amazonaws.com
+    queues:
+      order-processing: prod-order-processing-queue
+      notification-delivery: prod-notification-delivery-queue
+      product-update: prod-product-update-queue
+  dynamodb:
+    endpoint: https://dynamodb.${aws.region}.amazonaws.com
+    tables:
+      users: prod-users-table
+      products: prod-products-table
+      orders: prod-orders-table
+      notifications: prod-notifications-table
+
+# Production service endpoints
+services:
+  user-service:
+    url: ${USER_SERVICE_URL:http://user-service:8081/api/users}
+    connection-timeout: 3000
+    read-timeout: 3000
+    retry-max-attempts: 3
+    retry-delay: 500
+  product-catalog:
+    url: ${PRODUCT_CATALOG_URL:http://product-catalog:8082/api/products}
+    connection-timeout: 3000
+    read-timeout: 3000
+    retry-max-attempts: 3
+    retry-delay: 500
+  order-service:
+    url: ${ORDER_SERVICE_URL:http://order-service:8083/api/orders}
+    connection-timeout: 3000
+    read-timeout: 3000
+    retry-max-attempts: 3
+    retry-delay: 500
+  notification-service:
+    url: ${NOTIFICATION_SERVICE_URL:http://notification-service:8084/api/notifications}
+    connection-timeout: 3000
+    read-timeout: 3000
+    retry-max-attempts: 3
+    retry-delay: 500
+
+# Management & Monitoring - Production settings
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+      probes:
+        enabled: true
+    shutdown:
+      enabled: false
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+        step: 30s
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      sla:
+        http.server.requests: 50ms, 100ms, 200ms, 500ms, 1s
+
+# Logging - Production configuration
+logging:
+  level:
+    root: WARN
+    com.gradlemedium200: INFO
+    org.springframework: WARN
+    com.amazonaws: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%X{traceId}/%X{spanId}] [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: /var/log/gradlemedium200/application.log
+    max-size: 100MB
+    max-history: 30
+    total-size-cap: 3GB
+
+# Security - Production configuration
+security:
+  jwt:
+    token-validity-seconds: 3600  # Shorter token lifetime for production
+    secret-key: ${JWT_SECRET_KEY:MUST_BE_CONFIGURED_FOR_PRODUCTION}
+  allowed-origins: ${ALLOWED_ORIGINS:https://gradlemedium200.com,https://admin.gradlemedium200.com}
+  public-endpoints: /api/public/**,/actuator/health,/actuator/info
+
+# Application specific settings - Production environment
+app:
+  api-gateway:
+    timeout: 20000
+    rate-limit:
+      enabled: true
+      limit-per-hour: 10000
+      limit-per-minute: 1000
+  cors:
+    allowed-origins: ${ALLOWED_ORIGINS:https://gradlemedium200.com,https://admin.gradlemedium200.com}
+    allowed-methods: GET,POST,PUT,DELETE,OPTIONS
+    allowed-headers: Authorization,Content-Type
+    max-age: 3600
+  feature-flags:
+    enable-caching: true
+    enable-metrics: true
+    enable-circuit-breaker: true
+  cache:
+    ttl-seconds: 3600
+    maximum-size: 10000
+  monitoring:
+    alert-threshold-ms: 500
+    error-threshold-percent: 1.0
+    healthcheck-interval-ms: 30000
+
+# Circuit breaker configuration
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        slidingWindowSize: 100
+        permittedNumberOfCallsInHalfOpenState: 10
+        waitDurationInOpenState: 10000
+        failureRateThreshold: 50
+        eventConsumerBufferSize: 10
+    instances:
+      userService:
+        baseConfig: default
+      productCatalog:
+        baseConfig: default
+      orderService:
+        baseConfig: default
+      notificationService:
+        baseConfig: default
+  retry:
+    configs:
+      default:
+        maxAttempts: 3
+        waitDuration: 500ms
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+        retryExceptions:
+          - org.springframework.web.client.RestClientException
+          - com.gradlemedium200.exception.ServiceUnavailableException
+
+# Redis configuration for distributed cache (if used)
+spring.redis:
+  host: ${REDIS_HOST:redis}
+  port: ${REDIS_PORT:6379}
+  timeout: 2000
+  
+# Database configuration for production
+spring.datasource:
+  url: ${DATABASE_URL}
+  username: ${DATABASE_USER}
+  password: ${DATABASE_PASSWORD}
+  driver-class-name: org.postgresql.Driver
+  hikari:
+    maximum-pool-size: 30
+    minimum-idle: 5
+    idle-timeout: 60000
+    connection-timeout: 30000
+    max-lifetime: 1800000
+
+# JPA configuration for production
+spring.jpa:
+  hibernate:
+    ddl-auto: validate
+  properties:
+    hibernate:
+      dialect: org.hibernate.dialect.PostgreSQLDialect
+      jdbc.batch_size: 50
+      order_inserts: true
+      order_updates: true
+      jdbc.batch_versioned_data: true
+  show-sql: false
+
+# Springdoc OpenAPI configuration for production
+springdoc:
+  swagger-ui:
+    enabled: false
+  api-docs:
+    enabled: true
+    path: /api-docs
