@@ -1,6 +1,29 @@
+/*
+ * This settings file manages the multi-module structure for the gradlemedium200 project.
+ */
+
 rootProject.name = 'gradlemedium200'
-include 'common'
-include 'user-service'
-include 'product-catalog'
-include 'notification-service'
-include 'order-service'
+
+// Define modules
+include ':common'
+include ':user-service'
+include ':product-catalog'
+include ':notification-service'
+include ':order-service'
+
+// Set up project directory structure
+project(':common').projectDir = file('common')
+project(':user-service').projectDir = file('user-service')
+project(':product-catalog').projectDir = file('product-catalog')
+project(':notification-service').projectDir = file('notification-service')
+project(':order-service').projectDir = file('order-service')
+
+// Configure Java 17 toolchain for all projects
+gradle.beforeProject {
+    project -> 
+        project.plugins.withId('java') {
+            project.java.toolchain {
+                languageVersion = JavaLanguageVersion.of(17)
+            }
+        }
+}

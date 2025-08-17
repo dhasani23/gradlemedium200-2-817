@@ -10,7 +10,7 @@ plugins {
 
 group = 'com.gradlemedium200'
 version = '0.1.0-SNAPSHOT'
-sourceCompatibility = '1.8'
+sourceCompatibility = '17'
 
 repositories {
     mavenCentral()
@@ -56,8 +56,11 @@ dependencies {
     // Micrometer for metrics
     implementation 'io.micrometer:micrometer-registry-prometheus'
 
-    // Micronaut
-    implementation 'io.micronaut:micronaut-inject:2.5.13'
+    // Micronaut - Updated to version 4.2.0
+    implementation 'io.micronaut:micronaut-inject:4.2.0'
+    // Additional dependencies required by Micronaut 4.x
+    implementation 'io.micronaut:micronaut-core:4.2.0'
+    implementation 'jakarta.inject:jakarta.inject-api:2.0.1'
     
     // Testing dependencies
     testImplementation 'org.springframework.boot:spring-boot-starter-test'

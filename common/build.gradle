@@ -13,8 +13,8 @@ plugins {
 
 group = 'com.gradlemedium200'
 version = '1.0.0-SNAPSHOT'
-sourceCompatibility = JavaVersion.VERSION_1_8
-targetCompatibility = JavaVersion.VERSION_1_8
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17
 
 // With Spring Boot plugin applied with 'apply false', we don't need bootJar configuration
 // as the task is not available
@@ -99,7 +99,7 @@ test {
 // Create Javadoc with links to JDK and Spring API documentation
 javadoc {
     options {
-        links "https://docs.oracle.com/javase/8/docs/api/"
+        links "https://docs.oracle.com/en/java/javase/17/docs/api/"
         links "https://docs.spring.io/spring/docs/current/javadoc-api/"
     }
     options.addStringOption('Xdoclint:none', '-quiet')
