@@ -55,6 +55,9 @@ dependencies {
     
     // Micrometer for metrics
     implementation 'io.micrometer:micrometer-registry-prometheus'
+
+    // Micronaut
+    implementation 'io.micronaut:micronaut-inject:2.5.13'
     
     // Testing dependencies
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
